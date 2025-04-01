@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>QuickSight Session Monitor</title>
+    <script>
+      // Set or update the session cookie with the current timestamp
+      function setSessionCookie() {
+        var now = new Date().getTime();
+        // Set cookie to expire in 2 hours (adjust max-age as needed)
+        document.cookie = "sessionStart=" + now + "; path=/; max-age=7200";
+      }
+
+      // Retrieve the sessionStart cookie value
+      function getSessionCookie() {
+        var name = "sessionStart=";
+        var decodedCookie = decodeURIComponent(document.cookie);
+        var ca = decodedCookie.split(';');
+        for (var i = 0; i < ca.length; i++) {
+          var c = ca[i].trim();
+          if (c.indexOf(name) === 0) {
+            return Number(c.substring(name.length));
+          }
+        }
+        return null;
+      }
+
+      // Check whether 60 minutes have elapsed
+      function checkSession() {
+        var sessionStart = getSessionCookie();
+        if (sessionStart) {
+          var now = new Date().getTime();
+          var diffMinutes = (now - sessionStart) / (1000 * 60);
+          if (diffMinutes >= 60) {
+            // Show a confirmation popup to extend session or logout
+            var extendSession = confirm("Your session is about to expire. Would you like to extend your current session?");
+            if (extendSession) {
+              // User clicked "OK" - extend the session:
+              setSessionCookie();  // Reset cookie timer
+              window.location.href = "https://quicksight.aws.amazon.com/sn/auth/signin?directory_alias=studioc-dev";
+            } else {
+              // User clicked "Cancel" - log them out
+              window.location.href = "https://yourdomain.com/logout";  // Replace with your actual logout URL
+            }
+          }
+        } else {
+          // If no cookie exists, set it
+          setSessionCookie();
+        }
+      }
+
+      // When the page loads, set the session cookie and start checking every minute
+      window.onload = function() {
+        setSessionCookie();
+        setInterval(checkSession, 60000);  // Check every 60,000 ms (1 minute)
+      };
+    </script>
+</head>
+<body>
+    <!-- Embedded QuickSight dashboard -->
+    <iframe id="qsFrame"
+            src="https://quicksight.aws.amazon.com/sn/auth/signin?directory_alias=studioc-dev"
+            width="1000" height="600" frameborder="0">
+    </iframe>
+</body>
+</html>
